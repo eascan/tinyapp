@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/eascan/tinyapp/issues"
   },
-  "homepage": "https://github.com/eascan/tinyapp#readme"
+  "homepage": "https://github.com/eascan/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
