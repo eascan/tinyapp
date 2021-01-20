@@ -28,11 +28,6 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-//new URL submission page
-app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
-});
-
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   // console.log(shortURL)
@@ -42,15 +37,18 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
+//new URL submission page
+app.get("/urls/new", (req, res) => {
+  res.render("urls_new");
+});
+
+
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   res.redirect(`${longURL}`);
 });
 
-// app.get("/urls/:shortURL/delete", (req, res) => {
-//   res.redirect("/urls/:shortURL/delete");
-// })
-
+// user wants to delete a url from list
 app.post("/urls/:shortURL/delete", (req, res) => {
   
   const urlToDelete = req.params.shortURL;
@@ -63,6 +61,13 @@ app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render("urls_show", templateVars);
 });
+
+
+//user wants to update URL in short URL
+app.post("/urls/:id", (req, res) => {
+  urlDatabase[req.params.id] = req.body.id
+  res.redirect(`/urls/${req.params.id}`)
+})
 
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
