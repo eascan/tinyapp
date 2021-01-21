@@ -10,9 +10,9 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
         <% if(!isLoggedIn){ %>
-          <form method="POST" action="/login">
-            <input type="text" name="username" placeholder="username">
-            <button type="submit" class="btn btn-primary">Login</button>
+          <form method="POST" action="/login" class="form-inline my-2 my-lg-0">
+            <input type="text" name="username" placeholder="username" class="form-control mr-sm-2">
+            <button type="submit" class="btn btn-primary" class="btn btn-outline-success my-2 my-sm-0">Login</button>
           </form>
           <% } else { %>
             <span class="navbar navbar-dark">
