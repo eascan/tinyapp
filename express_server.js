@@ -10,23 +10,7 @@ app.use(cookieParser());
 app.set("view engine", "ejs");
 // app.set("views", path.join(__dirname, "views"));
 
-const { emailExists, passwordMatch, fetchUser } = require("./helpers/userHelpers")
-
-
-
-// const users = { 
-//   "userRandomID": {
-//     id: "userRandomID", 
-//     email: "user@example.com", 
-//     password: "purple-monkey-dinosaur"
-//   },
-//  "user2RandomID": {
-//     id: "user2RandomID", 
-//     email: "user2@example.com", 
-//     password: "dishwasher-funk"
-//   }
-// }
-
+const { emailExists, passwordMatch, fetchUser, tokenExists } = require("./helpers/userHelpers")
 
 
 const users = { 
@@ -63,11 +47,18 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+app.get("/login", (req, res) => {
+  const templateVars = { 
+    message: req.cookies["messages"]
+  }
+  res.render("urls_login", templateVars);
+});
+
 app.post("/login", (req, res) => {
   const incomingEmail = req.body.email;
   const incomingPassword = req.body.password;
-  if (emailExists(users, incomingEmail) && incomingEmail === users[incomingEmail].email) {
-    if (incomingPassword === users[incomingEmail].password) {
+  if (emailExists(users, incomingEmail)) {
+    if (passwordMatch(users, incomingEmail, incomingPassword)) {
       const randomID = generateRandomString();
       res.cookie("userEmail", incomingEmail);
       res.cookie("userToken", randomID);
@@ -75,42 +66,22 @@ app.post("/login", (req, res) => {
       res.redirect("/urls");
     } else {
       res.cookie("messages", "Incorrect password")
-      res.redirect("/urls");
+      res.redirect("/login");
     }
   } else {
     res.cookie("messages", "Incorrect email");
-    res.redirect("/urls");
+    res.redirect("/login");
   }
 })
 
-// ORIGINAL
-// app.post("/login", (req, res) => {
-//   const incomingEmail = req.body.email;
-//   const incomingPassword = req.body.password;
-//   if (users.hasOwnProperty(incomingEmail) && incomingEmail === users[incomingEmail].email) {
-//     if (incomingPassword === users[incomingEmail].password) {
-//       const randomID = generateRandomString();
-//       res.cookie("userEmail", incomingEmail);
-//       res.cookie("userToken", randomID);
-//       users[incomingEmail].token = randomID;
-//       res.redirect("/urls");
-//     } else {
-//       res.cookie("messages", "Incorrect password")
-//       res.redirect("/urls");
-//     }
-//   } else {
-//     res.cookie("messages", "Incorrect email");
-//     res.redirect("/urls");
-//   }
-// })
 
 app.get("/urls", (req, res) => {
-
+  const incomingEmail = req.cookies.userEmail;
+  const userToken = req.cookies.userToken;
   let isLoggedIn = false;
-  if (users.hasOwnProperty(req.cookies.userEmail) && users[req.cookies.userEmail].token === req.cookies.userToken) {
+  if (emailExists(users, incomingEmail) && tokenExists(users, incomingEmail, userToken)) {
     isLoggedIn = true
   }
-
 
   const templateVars = { 
     userEmail: req.cookies["userEmail"],
@@ -120,7 +91,6 @@ app.get("/urls", (req, res) => {
   }
   res.clearCookie("messages");
   res.render("urls_index", templateVars);
-
 });
 
 app.post("/urls", (req, res) => {
@@ -134,8 +104,10 @@ app.post("/urls", (req, res) => {
 //new URL submission page
 app.get("/urls/new", (req, res) => {
 
+  const incomingEmail = req.cookies.userEmail;
+  const userToken = req.cookies.userToken;
   let isLoggedIn = false;
-  if (users.hasOwnProperty(req.cookies.userEmail) && users[req.cookies.userEmail].token === req.cookies.userToken) {
+  if (emailExists(users, incomingEmail) && tokenExists(users, incomingEmail, userToken)) {
     isLoggedIn = true
   }
 
@@ -157,36 +129,22 @@ app.post("/register", (req, res) => {
   const userEmail = req.body.email;
   const userPassword = req.body.password;
   
-  if (users.hasOwnProperty(userEmail)) {
-    console.log("Email already exists");
+  if (!userEmail || !userPassword) {
+    res.status(400).send("Cannot leave fields empty");
+    return;
+  } else if (users.hasOwnProperty(userEmail)) {
+    res.status(400).send("Email already exists");
     res.redirect("/register");
-  }
-
-  users[userEmail] = {
-    email: userEmail,
-    password: userPassword,
-    token: generateRandomString(),
-  }
-  res.cookie("userEmail", userEmail);
-  res.cookie("userToken", users[userEmail].token);
-
-
-  // if (emailExists(users, uniqueUserID)) {
-  //   console.log("Email already exists");
-  //   res.redirect(register"");
-  // } else {
-  //   const newUser = {
-  //     id: uniqueUserID,
-  //     email: userEmail,
-  //     password: userPassword
-  //   }
-
-  //   users[uniqueUserID] = newUser;
-  //   res.cookie("userID", uniqueUserID);
+  } else {
+    users[userEmail] = {
+      email: userEmail,
+      password: userPassword,
+      token: generateRandomString(),
+    }
+    res.cookie("userEmail", userEmail);
+    res.cookie("userToken", users[userEmail].token);
     res.redirect("/urls");
-    // console.log(req.cookies.userID)
-    console.log(req.cookies)
-  // }
+  }
 })
 
 app.get("/u/:shortURL", (req, res) => {
@@ -204,8 +162,10 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 })
 
 app.get("/urls/:shortURL", (req, res) => {
+  const incomingEmail = req.cookies.userEmail;
+  const userToken = req.cookies.userToken;
   let isLoggedIn = false;
-  if (users.hasOwnProperty(req.cookies.userEmail) && users[req.cookies.userEmail].token === req.cookies.userToken) {
+  if (emailExists(users, incomingEmail) && tokenExists(users, incomingEmail, userToken)) {
     isLoggedIn = true
   }
 

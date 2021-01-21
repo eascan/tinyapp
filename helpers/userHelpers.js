@@ -7,8 +7,17 @@ const emailExists = (users, email) => {
   }
 }
 
-const passwordMatch = (users, email, password) => {
-  if (users[email].password === password) {
+
+const tokenExists = (users, email, userToken) => {
+  if (users[email].token === userToken) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+const passwordMatch = (users, email, userPassword) => {
+  if (users[email].password === userPassword) {
     return true;
   } else {
     return false;
@@ -25,4 +34,4 @@ const fetchUser = (users, email) => {
 }
 
 
-module.exports = { emailExists, passwordMatch, fetchUser };
+module.exports = { emailExists, passwordMatch, fetchUser, tokenExists };
