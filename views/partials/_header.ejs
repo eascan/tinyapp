@@ -9,14 +9,20 @@
       <div class="navbar-nav">
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
-        <% if(!isLoggedIn){ %>
+        <% if(isLoggedIn===false){ %>
           <form method="POST" action="/login" class="form-inline my-2 my-lg-0">
-            <input type="text" name="username" placeholder="username" class="form-control mr-sm-2">
+            <input type="text" name="email" placeholder="Email" class="form-control mr-sm-2">
+            <input type="password" name="password" placeholder="Password" class="form-control mr-sm-2">
             <button type="submit" class="btn btn-primary" class="btn btn-outline-success my-2 my-sm-0">Login</button>
+            <% if(message!==undefined) { %>
+              <H1>
+                <%= message %>
+              </H1>
+              <% } %>
           </form>
           <% } else { %>
             <span class="navbar navbar-dark">
-              Logged in as <%= username %>
+              Logged in as <%= userEmail %>
             </span>
             <form method="POST" action="/logout">
               <button type="submit" class="btn btn-outline-dark">Logout</button>
