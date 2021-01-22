@@ -10,7 +10,7 @@ app.use(cookieParser());
 app.set("view engine", "ejs");
 // app.set("views", path.join(__dirname, "views"));
 
-const { emailExists, passwordMatch, tokenExists } = require("./helpers/userHelpers")
+const { emailExists, passwordMatch, tokenExists, urlsForUser } = require("./helpers/userHelpers")
 
 
 const users = { 
@@ -33,8 +33,8 @@ function generateRandomString() {
 }
 
 const urlDatabase = {
-  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
-  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "email", userToken: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "email", userToken: "kJ56L" }
 };
 
 // const urlDatabase = {
@@ -82,13 +82,15 @@ app.get("/urls", (req, res) => {
   const incomingEmail = req.cookies.userEmail;
   const userToken = req.cookies.userToken;
   let isLoggedIn = false;
+  let urlPerUser;
   if (emailExists(users, incomingEmail) && tokenExists(users, incomingEmail, userToken)) {
-    isLoggedIn = true
+    isLoggedIn = true;
+    urlPerUser = urlsForUser(urlDatabase, incomingEmail);
   }
 
   const templateVars = { 
     userEmail: req.cookies["userEmail"],
-    urls: urlDatabase,
+    urls: urlPerUser,
     isLoggedIn,
     message: req.cookies["messages"]
   }
@@ -102,7 +104,8 @@ app.post("/urls", (req, res) => {
   console.log(req.body.longURL)
   urlDatabase[shortURL] = {
     longURL: req.body.longURL,
-    userID: req.cookies["userToken"]
+    userID: req.cookies["userEmail"],
+    userToken: req.cookies["userToken"]
   }
   res.redirect(`/urls/${shortURL}`);
 });
@@ -161,13 +164,18 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(`${long}`);
 });
 
-// user wants to delete a url from list
+// user wants to delete a url from list, only allows after login
 app.post("/urls/:shortURL/delete", (req, res) => {
-  
-  const urlToDelete = req.params.shortURL;
-  delete urlDatabase[urlToDelete];
-  res.redirect('/urls');
+  const incomingEmail = req.cookies.userEmail;
+  const userToken = req.cookies.userToken;
 
+  if (emailExists(users, incomingEmail) && tokenExists(users, incomingEmail, userToken)) {
+    const urlToDelete = req.params.shortURL;
+    delete urlDatabase[urlToDelete];
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login")
+  }
 })
 
 app.get("/urls/:shortURL", (req, res) => {
@@ -201,7 +209,7 @@ app.post("/urls/:id", (req, res) => {
 
 app.post("/logout", (req, res) => {
   res.clearCookie("userEmail");
-  res.clearCookie("userToken")
+  // res.clearCookie("userToken")
   res.redirect("/urls");
 });
 

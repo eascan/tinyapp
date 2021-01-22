@@ -33,5 +33,16 @@ const passwordMatch = (users, email, userPassword) => {
 //   }
 // }
 
+const urlsForUser = (db, user) => {
+  const urls = {};
 
-module.exports = { emailExists, passwordMatch, tokenExists };
+  for (const link in db) {
+    if (db[link].userID === user) {
+      urls[link] = { longURL: db[link].longURL, userID: user}
+    }
+  }
+  return urls;
+}
+
+
+module.exports = { emailExists, passwordMatch, tokenExists, urlsForUser };
