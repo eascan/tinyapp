@@ -25,13 +25,13 @@ const passwordMatch = (users, email, userPassword) => {
 }
 
 
-const fetchUser = (users, email) => {
-  if (users[email]) {
-    return users[email];
-  } else {
-    return {};
-  }
-}
+// const fetchUser = (users, email) => {
+//   if (users[email]) {
+//     return users[email];
+//   } else {
+//     return {};
+//   }
+// }
 
 
-module.exports = { emailExists, passwordMatch, fetchUser, tokenExists };
+module.exports = { emailExists, passwordMatch, tokenExists };

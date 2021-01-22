@@ -10,7 +10,7 @@ app.use(cookieParser());
 app.set("view engine", "ejs");
 // app.set("views", path.join(__dirname, "views"));
 
-const { emailExists, passwordMatch, fetchUser, tokenExists } = require("./helpers/userHelpers")
+const { emailExists, passwordMatch, tokenExists } = require("./helpers/userHelpers")
 
 
 const users = { 
@@ -32,12 +32,15 @@ function generateRandomString() {
   return r;
 }
 
-
-
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
+
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
 
 app.get("/users", (req, res) => {
   res.send(users)
@@ -93,11 +96,14 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+// User wants to create a tiny url
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-
-  urlDatabase[shortURL] = req.body.longURL;
-
+  console.log(req.body.longURL)
+  urlDatabase[shortURL] = {
+    longURL: req.body.longURL,
+    userID: req.cookies["userToken"]
+  }
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -109,16 +115,18 @@ app.get("/urls/new", (req, res) => {
   let isLoggedIn = false;
   if (emailExists(users, incomingEmail) && tokenExists(users, incomingEmail, userToken)) {
     isLoggedIn = true
+    const templateVars = { 
+      userEmail: req.cookies["userEmail"],
+      urls: urlDatabase,
+      isLoggedIn,
+      message: req.cookies["messages"]
+    }
+    res.clearCookie("messages");
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login");
   }
 
-  const templateVars = { 
-    userEmail: req.cookies["userEmail"],
-    urls: urlDatabase,
-    isLoggedIn,
-    message: req.cookies["messages"]
-  }
-  res.clearCookie("messages");
-  res.render("urls_new", templateVars);
 });
 
 app.get("/register", (req, res) => {
@@ -147,9 +155,10 @@ app.post("/register", (req, res) => {
   }
 })
 
+// user wants to go to longURL through the new short one
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
-  res.redirect(`${longURL}`);
+  const long = urlDatabase[req.params.shortURL].longURL;
+  res.redirect(`${long}`);
 });
 
 // user wants to delete a url from list
@@ -171,7 +180,7 @@ app.get("/urls/:shortURL", (req, res) => {
 
   const templateVars = { 
     shortURL: req.params.shortURL, 
-    longURL: urlDatabase[req.params.shortURL],
+    long: urlDatabase[req.params.shortURL].longURL,
     userEmail: req.cookies["userEmail"],
     isLoggedIn,
     message: req.cookies["messages"]
@@ -183,7 +192,10 @@ app.get("/urls/:shortURL", (req, res) => {
 
 //user wants to update URL in short URL
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = req.body.id
+  urlDatabase[req.params.id] = {
+    longURL: req.body.id,
+    userID: req.cookies["userToken"]
+  }
   res.redirect(`/urls/${req.params.id}`)
 })
 
