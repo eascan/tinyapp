@@ -8,10 +8,8 @@ const cookieParser = require("cookie-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 app.set("view engine", "ejs");
-// app.set("views", path.join(__dirname, "views"));
 
 const { emailExists, passwordMatch, tokenExists, urlsForUser } = require("./helpers/userHelpers")
-
 
 const users = { 
   "user@example.com": { 
@@ -26,7 +24,6 @@ const users = {
   }
 }
 
-
 function generateRandomString() {
   const r = Math.random().toString(36).substring(7);
   return r;
@@ -36,11 +33,6 @@ const urlDatabase = {
   b6UTxQ: { longURL: "https://www.tsn.ca", userID: "email", userToken: "aJ48lW" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "email", userToken: "kJ56L" }
 };
-
-// const urlDatabase = {
-//   "b2xVn2": "http://www.lighthouselabs.ca",
-//   "9sm5xK": "http://www.google.com"
-// };
 
 app.get("/users", (req, res) => {
   res.send(users)
@@ -200,11 +192,19 @@ app.get("/urls/:shortURL", (req, res) => {
 
 //user wants to update URL in short URL
 app.post("/urls/:id", (req, res) => {
-  urlDatabase[req.params.id] = {
-    longURL: req.body.id,
-    userID: req.cookies["userToken"]
+  const incomingEmail = req.cookies.userEmail;
+  const userToken = req.cookies.userToken;
+
+  if (emailExists(users, incomingEmail) && tokenExists(users, incomingEmail, userToken)) {
+    urlDatabase[req.params.id] = {
+      longURL: req.body.id,
+      userID: req.cookies["userEmail"],
+      userToken: req.cookies["userToken"]
+    }
+    res.redirect(`/urls/${req.params.id}`);
+  } else {
+    res.redirect("/login");
   }
-  res.redirect(`/urls/${req.params.id}`)
 })
 
 app.post("/logout", (req, res) => {
