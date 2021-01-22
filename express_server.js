@@ -25,7 +25,7 @@ const users = {
     password: "dishwasher-funk",
     token: "Random3String"
   }
-}
+};
 
 function generateRandomString() {
   const r = Math.random().toString(36).substring(7);
@@ -48,18 +48,21 @@ app.get("/", (req, res) => {
   }
 });
 
-app.get("/users", (req, res) => {
-  res.send(users)
-})
-
-
 app.get("/login", (req, res) => {
-  const templateVars = { 
-    message: req.session["messages"]
-  }
-  res.render("urls_login", templateVars);
+  const incomingEmail = req.session.userEmail;
+  const userToken = req.session.userToken;
+
+  if (emailExists(users, incomingEmail) && tokenExists(users, incomingEmail, userToken)) {
+    res.redirect("/urls");
+  } else {
+    const templateVars = { 
+      message: req.session["messages"]
+    }
+    res.render("urls_login", templateVars)
+  };
 });
 
+// Login to app, start new cookie session
 app.post("/login", (req, res) => {
   const incomingEmail = req.body.email;
   const incomingPassword = req.body.password;
@@ -78,9 +81,9 @@ app.post("/login", (req, res) => {
     req.session["messages"] = "Incorrect email";
     res.redirect("/login");
   }
-})
+});
 
-
+//main page, shows account URLS if logged in 
 app.get("/urls", (req, res) => {
   const incomingEmail = req.session.userEmail;
   const userToken = req.session.userToken;
@@ -96,7 +99,7 @@ app.get("/urls", (req, res) => {
     urls: urlPerUser,
     isLoggedIn,
     message: req.session["messages"]
-  }
+  };
   req.session["messages"] = null;
   res.render("urls_index", templateVars);
 });
@@ -112,20 +115,20 @@ app.post("/urls", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
-//new URL submission page
+//new URL submission page for logged-in users
 app.get("/urls/new", (req, res) => {
 
   const incomingEmail = req.session.userEmail;
   const userToken = req.session.userToken;
   let isLoggedIn = false;
   if (emailExists(users, incomingEmail) && tokenExists(users, incomingEmail, userToken)) {
-    isLoggedIn = true
+    isLoggedIn = true;
     const templateVars = { 
       userEmail: req.session["userEmail"],
       urls: urlDatabase,
       isLoggedIn,
       message: req.session["messages"]
-    }
+    };
     req.session["messages"] = null;
     res.render("urls_new", templateVars);
   } else {
@@ -135,7 +138,14 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  res.render("urls_register");
+  const incomingEmail = req.session.userEmail;
+  const userToken = req.session.userToken;
+
+  if (emailExists(users, incomingEmail) && tokenExists(users, incomingEmail, userToken)) {
+    res.redirect("/urls");
+  } else {
+    res.render("urls_register");
+  }
 })
 
 app.post("/register", (req, res) => {
@@ -176,12 +186,13 @@ app.post("/urls/:shortURL/delete", (req, res) => {
     delete urlDatabase[urlToDelete];
     res.redirect("/urls");
   } else {
-    res.redirect("/login")
+    res.redirect("/login");
   }
 })
 
+// cannot view short URL and edit it, only correct user can view their own short URLS
 app.get("/urls/:shortURL", (req, res) => {
-  const incomingEmail = req.session.userEmail;
+  const incomingEmail = req.session["userEmail"];
   const userToken = req.session.userToken;
   let isLoggedIn = false;
   if (emailExists(users, incomingEmail) && tokenExists(users, incomingEmail, userToken) && urlDatabase[req.params.shortURL].userID === incomingEmail) {
@@ -195,13 +206,13 @@ app.get("/urls/:shortURL", (req, res) => {
     };
     req.session["messages"];
     res.render("urls_show", templateVars);
+  } else if (emailExists(users, incomingEmail) && tokenExists(users, incomingEmail, userToken) && urlDatabase[req.params.shortURL].userID !== incomingEmail) {
+    res.redirect("/login");
   } else {
+    req.session["messages"] = "Please login first";
     res.redirect("/login");
   }
 });
-
-
-
 
 //user wants to update URL in short URL
 app.post("/urls/:id", (req, res) => {
@@ -214,14 +225,15 @@ app.post("/urls/:id", (req, res) => {
       userID: req.session["userEmail"],
       userToken: req.session["userToken"]
     }
-    res.redirect(`/urls/${req.params.id}`);
+    res.redirect("/urls");
   } else {
     res.redirect("/login");
   }
-})
+});
 
 app.post("/logout", (req, res) => {
   req.session["userEmail"] = null;
+  req.session["userToken"] = null;
   res.redirect("/urls");
 });
 
