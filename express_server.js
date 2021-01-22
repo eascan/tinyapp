@@ -141,7 +141,7 @@ app.post("/register", (req, res) => {
   } else {
     users[userEmail] = {
       email: userEmail,
-      password: userPassword,
+      password: bcrypt.hashSync(userPassword, 10),
       token: generateRandomString(),
     }
     res.cookie("userEmail", userEmail);

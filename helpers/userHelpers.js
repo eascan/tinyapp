@@ -1,3 +1,6 @@
+const bcrypt = require('bcrypt');
+
+
 // users is an object of objects
 const emailExists = (users, email) => {
   if (users.hasOwnProperty(email)) {
@@ -17,21 +20,12 @@ const tokenExists = (users, email, userToken) => {
 }
 
 const passwordMatch = (users, email, userPassword) => {
-  if (users[email].password === userPassword) {
+  if (bcrypt.compareSync(userPassword, users[email].password)) {
     return true;
   } else {
     return false;
   }
 }
-
-
-// const fetchUser = (users, email) => {
-//   if (users[email]) {
-//     return users[email];
-//   } else {
-//     return {};
-//   }
-// }
 
 const urlsForUser = (db, user) => {
   const urls = {};
