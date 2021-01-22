@@ -57,7 +57,7 @@ app.get("/login", (req, res) => {
   } else {
     const templateVars = { 
       message: req.session["messages"]
-    }
+    };
     res.render("urls_login", templateVars)
   };
 });
