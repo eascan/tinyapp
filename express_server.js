@@ -37,13 +37,21 @@ const urlDatabase = {
   i3BoGr: { longURL: "https://www.google.ca", userID: "email", userToken: "kJ56L" }
 };
 
+app.get("/", (req, res) => {
+  const incomingEmail = req.session.userEmail;
+  const userToken = req.session.userToken;
+
+  if (emailExists(users, incomingEmail) && tokenExists(users, incomingEmail, userToken)) {
+    res.redirect("/urls");
+  } else {
+    res.redirect("/login");
+  }
+});
+
 app.get("/users", (req, res) => {
   res.send(users)
 })
 
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
 
 app.get("/login", (req, res) => {
   const templateVars = { 
@@ -176,20 +184,23 @@ app.get("/urls/:shortURL", (req, res) => {
   const incomingEmail = req.session.userEmail;
   const userToken = req.session.userToken;
   let isLoggedIn = false;
-  if (emailExists(users, incomingEmail) && tokenExists(users, incomingEmail, userToken)) {
+  if (emailExists(users, incomingEmail) && tokenExists(users, incomingEmail, userToken) && urlDatabase[req.params.shortURL].userID === incomingEmail) {
     isLoggedIn = true;
+    const templateVars = { 
+      shortURL: req.params.shortURL, 
+      long: urlDatabase[req.params.shortURL].longURL,
+      userEmail: req.session["userEmail"],
+      isLoggedIn,
+      message: req.session["messages"]
+    };
+    req.session["messages"];
+    res.render("urls_show", templateVars);
+  } else {
+    res.redirect("/login");
   }
-
-  const templateVars = { 
-    shortURL: req.params.shortURL, 
-    long: urlDatabase[req.params.shortURL].longURL,
-    userEmail: req.session["userEmail"],
-    isLoggedIn,
-    message: req.session["messages"]
-  };
-  req.session["messages"];
-  res.render("urls_show", templateVars);
 });
+
+
 
 
 //user wants to update URL in short URL
