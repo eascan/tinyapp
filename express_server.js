@@ -137,7 +137,7 @@ app.post("/register", (req, res) => {
   if (!userEmail || !userPassword) {
     res.status(400).send("Cannot leave fields empty");
     return;
-  } else if (users.hasOwnProperty(userEmail)) {
+  } else if (emailExists(users, userEmail)) {
     res.status(400).send("Email already exists");
     res.redirect("/register");
   } else {
