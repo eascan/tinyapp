@@ -59,7 +59,7 @@ app.get("/login", (req, res) => {
       message: req.session["messages"]
     };
     res.render("urls_login", templateVars)
-  };
+  }
 });
 
 // Login to app, start new cookie session
@@ -111,7 +111,7 @@ app.post("/urls", (req, res) => {
     longURL: req.body.longURL,
     userID: req.session["userEmail"],
     userToken: req.session["userToken"]
-  }
+  };
   res.redirect(`/urls/${shortURL}`);
 });
 
@@ -168,7 +168,7 @@ app.post("/register", (req, res) => {
     req.session["userToken"] = users[userEmail].token;
     res.redirect("/urls");
   }
-})
+});
 
 // user wants to go to longURL through the new short one
 app.get("/u/:shortURL", (req, res) => {
@@ -224,7 +224,7 @@ app.post("/urls/:id", (req, res) => {
       longURL: req.body.id,
       userID: req.session["userEmail"],
       userToken: req.session["userToken"]
-    }
+    };
     res.redirect("/urls");
   } else {
     res.redirect("/login");
